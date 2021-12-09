@@ -8,7 +8,6 @@ library(rsconnect)
 
 Baseball <- read_csv(here::here("Shiny/Player spreadsheet-CSV.csv"))
 
-#n_total <- nrow(Player_spreadsheet_CSV)
 Baseball <- rename(Baseball, "Single" = "1B")
 Baseball <- rename(Baseball, "SinglePct" = "1B%")
 Baseball <- rename(Baseball, "Double" = "2B")
@@ -92,16 +91,10 @@ ui <- fluidPage(
                   selected = "TEAM")
       
     ),
-    conditionalPanel(
-      'input.dataset === "Baseball"',
-      checkboxGroupInput("show_var", "Columns in Baseball:",
-                          names(Baseball), selected = names(Baseball))
-    ), 
-
     mainPanel(
       tabsetPanel(type = "tabs",
-                  tabPanel("scatterploot", plotOutput("scatterplot")),
-                  tabPanel("Baseball", DT::tableOutput("mytable")))
+                  tabPanel("scatterplot", plotOutput("scatterplot")),
+                  tabPanel("Baseball", tableOutput("mytable")))
       #plotOutput(outputId = "densityplot", height = 200)
     )
   )
@@ -116,10 +109,6 @@ server <- function(input, output, session) {
                                        y = input$y,
                                        color = input$z)) +
       geom_point()
-  })
-  Baseball2 = Baseball[sample(nrow(Baseball), 270), ]
-  output$mytable = DT::renderDataTable({
-    DT::datatable(Baseball2[, input$show_vars, drop = FALSE])
   })
 }
 

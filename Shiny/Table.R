@@ -1,14 +1,14 @@
 # Loading Packages
-
+library(shiny)
+library(ggplot2)
+library(dplyr)
+library(DT)
 library(tidyverse)
 library(shiny)
 library(rsconnect)
 
 # Loading data
-
-Baseball <- read_csv(here::here("Shiny/Player spreadsheet-CSV.csv"))
-n_total <- nrow(Baseball)
-
+Baseball <- read_csv(here::here("~/STA 518/Final-Project-518/Shiny/Player spreadsheet-CSV.csv"))
 Baseball <- rename(Baseball, "Single" = "1B")
 Baseball <- rename(Baseball, "SinglePct" = "1B%")
 Baseball <- rename(Baseball, "Double" = "2B")
@@ -20,6 +20,8 @@ Baseball <- rename(Baseball, "StolenBasePct" = "SB%")
 Baseball <- rename(Baseball, "BaseOnBallsPct" = "BB%")
 Baseball <- rename(Baseball, "StrikeoutPct" = "K%")
 Baseball <- rename(Baseball, "OutPct" = "OUT%")
+
+n_total <- nrow(Baseball)
 
 # Defining UI
 ui <- fluidPage(
@@ -35,14 +37,14 @@ ui <- fluidPage(
       numericInput(
         inputId = "n",
         label = "Sample size:",
-        value = 30,
+        value = 270,
         min = 1, max = n_total,
         step = 1
       )
     ),
     
     mainPanel(
-      dataTableOutput(outputId = "Baseballtable")
+      DT::dataTableOutput(outputId = "Baseballtable")
     )
   )
 )
@@ -50,7 +52,7 @@ ui <- fluidPage(
 # Define server
 
 server <- function(input, output, session) {
-  output$Baseballtable <- renderDataTable({
+  output$Baseballtable <- DT::renderDataTable({
     Baseball_sample <- Baseball %>%
       sample_n(input$n) %>%
       select(PLAYER:OutPct)
@@ -62,6 +64,6 @@ server <- function(input, output, session) {
   })
 }
 # Create a shiny app object
-shinyApp(ui = ui, server = server)
+shinyApp(ui, server)
 
 
