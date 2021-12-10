@@ -79,19 +79,13 @@ ui <- fluidPage(
                    "Strikeouts" = "K", "Strikeout Percentage" = "StrikeoutPct", 
                    "Hit by Pitch" = "HBP",
                    "Percentage of all other Outs" = "OutPct"),
-       selected = "AVG"),
-      
-      # Select variables for color
-      selectInput(inputId = "z", 
-                  label = "Color by:",
-                  choices = c("TEAM", "POSITION", "Bats"),
-                  selected = "TEAM")
-      
+       selected = "AVG"
+       )
     ),
+    
     mainPanel(
-      tabsetPanel(type = "tabs",
-                  tabPanel("scatterplot", plotOutput("scatterplot")),
-                  tabPanel("Baseball", tableOutput("mytable")))
+      plotOutput(outputId = "scatterplot"),
+      textOutput(outputId = "correlation")
     )
   )
 )
@@ -99,12 +93,24 @@ ui <- fluidPage(
 # Define server
 
 server <- function(input, output, session) {
-  
   output$scatterplot <- renderPlot({
     ggplot(data = Baseball, aes_string(x = input$x,
-                                       y = input$y,
-                                       color = input$z)) +
+                                       y = input$y)) +
       geom_point()
+  })
+  
+  # Create text output stating the correlation between the two ploted
+  output$correlation <-renderText({
+    r <- round(cor(Baseball[, input$x], Baseball[, input$y], 
+                   use = "pairwise"), 3)
+    paste0(
+      "Correlation = ", r,
+      ". Note: ",
+      " If r < |0.3|, there is little-to-no correlation.",
+      " If r is between |0.3| and |0.5|, there is weak (or low) correlation",
+      " If r is between |0.5| and |0.7|, there is moderate correlation",
+      " If r > |0.7|, there is strong (or high) correlation"
+    )
   })
 }
 
