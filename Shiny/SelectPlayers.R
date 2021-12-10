@@ -21,7 +21,7 @@ Baseball <- rename(Baseball, "BaseOnBallsPct" = "BB%")
 Baseball <- rename(Baseball, "StrikeoutPct" = "K%")
 Baseball <- rename(Baseball, "OutPct" = "OUT%")
 
-n_total <- nrow(Baseball)
+all_players <- sort(unique(Baseball$PLAYER))
 
 # Defining UI
 ui <- fluidPage(
@@ -30,15 +30,13 @@ ui <- fluidPage(
     
     # Inputs:
     sidebarPanel(
-      
-      HTML(paste("Enter a value between 1 and", n_total)),
-      
-      numericInput(
-        inputId = "n",
-        label = "Sample size:",
-        value = 270,
-        min = 1, max = n_total,
-        step = 1
+      selectInput(
+        inputId = "PLAYER",
+        label = "Select Player(s):",
+        choices = all_players,
+        selected = "Javier Baez",
+        multiple = TRUE
+        
       )
     ),
     
@@ -51,12 +49,15 @@ ui <- fluidPage(
 # Define server
 
 server <- function(input, output, session) {
+  
+  #Create data table
   output$Baseballtable <- DT::renderDataTable({
-    Baseball_sample <- Baseball %>%
-      sample_n(input$n) %>%
+    req(input$PLAYER)
+    selected_players <- Baseball %>%
+      filter(PLAYER %in% input$PLAYER) %>%
       select(PLAYER:OutPct)
     DT::datatable(
-      data = Baseball_sample,
+      data = selected_players,
       options = list(pageLength = 10),
       rownames = FALSE
     )
