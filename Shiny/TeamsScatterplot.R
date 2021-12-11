@@ -86,7 +86,7 @@ ui <- fluidPage(
       # Select variables for color
       selectInput(inputId = "z", 
                   label = "Color by:",
-                  choices = c("PLAYER", "POSITION", "Bats"),
+                  choices = c("PLAYER", "TEAM", "POSITION", "Bats"),
                   selected = "PLAYER"),
       
       textInput(
