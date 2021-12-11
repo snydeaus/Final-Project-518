@@ -3,6 +3,7 @@
 library(shiny)
 library(ggplot2)
 library(dplyr)
+library(tools)
 library(DT)
 library(tidyverse)
 library(shiny)
@@ -26,6 +27,7 @@ Baseball <- rename(Baseball, "OutPct" = "OUT%")
 
 # Defining UI
 ui <- fluidPage(
+  titlePanel("Team browser"),
   
   sidebarLayout(
     
@@ -79,13 +81,38 @@ ui <- fluidPage(
                    "Strikeouts" = "K", "Strikeout Percentage" = "StrikeoutPct", 
                    "Hit by Pitch" = "HBP",
                    "Percentage of all other Outs" = "OutPct"),
-       selected = "AVG"
-       )
+       selected = "AVG"),
+      
+      # Select variables for color
+      selectInput(inputId = "z", 
+                  label = "Color by:",
+                  choices = c("PLAYER", "POSITION", "Bats"),
+                  selected = "PLAYER"),
+      
+      textInput(
+        inputId = "plot_title",
+        label = "Plot title",
+        placeholder = "Enter text for plot title"),
+      
+      checkboxGroupInput(
+        inputId = "selected_team",
+        label = "Select Team(s):",
+        choices = c("Arizona Diamondbacks", "Atlanta Braves", "Baltimore Orioles", 
+                    "Boston Red Sox", "Chicago Cubs", "Chicago White Sox", "Cincinnati Reds", 
+                    "Cleveland Indians", "Colorado Rockies", "Detroit Tigers", 
+                    "Houston Astros", "Kansas City Royals", "Los Angeles Angels", 
+                    "Los Angeles Dodgers", "Miami Marlins", "Milwaukee Brewers", 
+                    "Minnesota Twins", "New York Mets", "New York Yankees", 
+                    "Oakland Athletics", "Philadelphia Phillies", "Pittsburgh Pirates", 
+                    "San Diego Padres", "San Francisco Giants", "Seattle Mariners", 
+                    "St. Louis Cardinals", "Tampa Bay Rays", "Texas Rangers", 
+                    "Toronto Blue Jays", "Washington Nationals"),
+        selected = "Chicago Cubs")
     ),
     
     mainPanel(
       plotOutput(outputId = "scatterplot"),
-      textOutput(outputId = "correlation")
+      textOutput(outputId = "description")
     )
   )
 )
@@ -93,24 +120,32 @@ ui <- fluidPage(
 # Define server
 
 server <- function(input, output, session) {
-  output$scatterplot <- renderPlot({
-    ggplot(data = Baseball, aes_string(x = input$x,
-                                       y = input$y)) +
-      geom_point()
+  
+  # Create a subset of data filtering for selected teams
+  Baseball_subset <- reactive({
+    req(input$selected_team)
+    filter(Baseball, TEAM %in% input$selected_team)
   })
   
-  # Create text output stating the correlation between the two plotted
-  output$correlation <-renderText({
-    r <- round(cor(Baseball[, input$x], Baseball[, input$y], 
-                   use = "pairwise"), 3)
-    paste0(
-      "Correlation = ", r,
-      ". Note: ",
-      " If r < |0.3|, there is little-to-no correlation.",
-      " If r is between |0.3| and |0.5|, there is weak (or low) correlation",
-      " If r is between |0.5| and |0.7|, there is moderate correlation",
-      " If r > |0.7|, there is strong (or high) correlation"
-    )
+  #Convert plot_title toTitleCase
+  cool_plot_title <- reactive({
+    toTitleCase(input$plot_title)
+  })
+  
+  #Create scatterplot object the plotOutput function is expecting
+  output$scatterplot <- renderPlot({
+    ggplot(data = Baseball_subset(), aes_string(x = input$x,
+                                       y = input$y,
+                                       color = input$z)) +
+      geom_point() +
+      labs(title = cool_plot_title())
+  })
+  
+  # Create descriptive text
+  output$description <- renderText({
+    paste0("The plot above titled '", cool_plot_title(), "' visualizes the 
+           relationship between ", input$x, " and ", input$y, ", conditional on ",
+           input$z, ".")
   })
 }
 
